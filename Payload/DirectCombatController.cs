@@ -83,10 +83,10 @@ internal static class DirectCombatController
     private const ushort PauseGame = 0x39; // Space
     private const ushort Escape = 0x01; // Esc
     private const ushort Inventory = 0x17; // I
-    private const ushort GroupStyle = 0x2E; // C
     private static readonly ushort[] Styles = { 0x2D, 0x2C, 0x2E }; // X fast, Z strong, C group
     private static readonly ushort[] Signs = { 0x02, 0x03, 0x04, 0x05, 0x06 }; // 1 Aard, 2 Quen, 3 Yrden, 4 Igni, 5 Axii
     private static readonly ushort[] Weapons = { 0x10, 0x12, 0x13 }; // Q steel, E silver, R extra weapon 1
+    private static readonly ushort[] QuickSlots = { 0x07, 0x08, 0x09 }; // 6, 7, 8: potions and bombs
     private static readonly Dictionary<char, ushort> MovementScans = new Dictionary<char, ushort>
     {
         { 'W', 0x11 }, { 'A', 0x1E }, { 'S', 0x1F }, { 'D', 0x20 }
@@ -238,6 +238,7 @@ internal static class DirectCombatController
         bool previousBack = false, previousLeftThumb = false;
         bool previousUp = false, previousDown = false, previousLeft = false, previousRight = false;
         int styleIndex = 1, signIndex = Signs.Length - 1, weaponIndex = Weapons.Length - 1;
+        int quickSlotIndex = QuickSlots.Length - 1;
         ushort lastSword = Weapons[0];
         bool signMouseDown = false;
         Process witcherProcess = null;
@@ -365,7 +366,11 @@ internal static class DirectCombatController
                 previousDown = down;
 
                 if (active && x && !previousX) Attack(Styles[styleIndex]);
-                if (active && y && !previousY) Attack(GroupStyle);
+                if (active && y && !previousY)
+                {
+                    quickSlotIndex = (quickSlotIndex + 1) % QuickSlots.Length;
+                    Tap(QuickSlots[quickSlotIndex]);
+                }
                 if (active && a && !previousA) Click(); // Talk, pick up, use
                 previousX = x; previousY = y; previousA = a;
 
