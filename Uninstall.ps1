@@ -44,7 +44,20 @@ try {
             Where-Object { $_.ExecutablePath -eq $controllerPath })
         if ($stillRunning.Count) { throw 'The controller bridge did not stop; leaving files untouched.' }
     }
+    $bindingBackup = Join-Path $installDir 'nextweapon.bak'
+    if (Test-Path -LiteralPath $bindingBackup) {
+        $originalBinding = (Get-Content -LiteralPath $bindingBackup -Raw).Trim()
+        $bindingsKey = 'HKCU:\Software\CD Projekt RED\Witcher\Bindings'
+        if (Test-Path -LiteralPath $bindingsKey) {
+            if ([string]::IsNullOrEmpty($originalBinding)) {
+                Remove-ItemProperty -Path $bindingsKey -Name 'NextWeapon' -ErrorAction SilentlyContinue
+            } else {
+                Set-ItemProperty -Path $bindingsKey -Name 'NextWeapon' -Value $originalBinding
+            }
+        }
+    }
     foreach ($pair in $pairs) { if (Test-Path -LiteralPath $pair[0]) { Remove-Item -LiteralPath $pair[0] } }
+    if (Test-Path -LiteralPath $bindingBackup) { Remove-Item -LiteralPath $bindingBackup -Force }
     Remove-Item -LiteralPath $manifestPath
     if ((Test-Path -LiteralPath $installDir) -and -not (Get-ChildItem -LiteralPath $installDir -Force)) { Remove-Item -LiteralPath $installDir }
     if (Test-Path -LiteralPath $locationFile) {

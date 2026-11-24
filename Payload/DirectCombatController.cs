@@ -4,9 +4,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using Microsoft.Win32;
 
 internal static class DirectCombatController
 {
@@ -87,6 +89,11 @@ internal static class DirectCombatController
     private const ushort Inventory = 0x17; // I
     private const ushort Map = 0x32; // M
     private const ushort LeftAlt = 0x38; // Alt
+    private const ushort NextWeaponScan = 0x25; // K, temporarily bound to the game's Next weapon action
+    private const string BindingsPath = @"Software\CD Projekt RED\Witcher\Bindings";
+    private const string NextWeaponValueName = "NextWeapon";
+    private const string NextWeaponBinding = "89"; // the game stores 'k' as 107 - 18
+    private const string NextWeaponBackupName = "nextweapon.bak";
     private static readonly ushort[] Styles = { 0x2D, 0x2C, 0x2E }; // X fast, Z strong, C group
     private static readonly ushort[] Signs = { 0x02, 0x03, 0x04, 0x05, 0x06 }; // 1 Aard, 2 Quen, 3 Yrden, 4 Igni, 5 Axii
     private static readonly ushort[] Weapons = { 0x10, 0x12, 0x13, 0x14, 0x16 }; // Q steel, E silver, R/T/U extra weapons 1-3
@@ -209,6 +216,61 @@ internal static class DirectCombatController
         SafeAltUp();
     }
 
+    // Point the game's own "next weapon" action at K while the bridge runs, so it can
+    // skip empty slots. The original binding is kept in nextweapon.bak and restored on exit.
+    private static string nextWeaponBackupPath;
+    private static string originalNextWeapon;
+    private static bool nextWeaponChanged;
+
+    private static bool TryBindNextWeapon()
+    {
+        try
+        {
+            using (RegistryKey key = Registry.CurrentUser.OpenSubKey(BindingsPath, true))
+            {
+                if (key == null) return false;
+                object current = key.GetValue(NextWeaponValueName);
+                string text = current == null ? "" : current.ToString();
+                nextWeaponBackupPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, NextWeaponBackupName);
+                if (File.Exists(nextWeaponBackupPath))
+                {
+                    originalNextWeapon = File.ReadAllText(nextWeaponBackupPath).Trim();
+                }
+                else
+                {
+                    originalNextWeapon = text;
+                    File.WriteAllText(nextWeaponBackupPath, text);
+                }
+                if (!string.Equals(text, NextWeaponBinding, StringComparison.Ordinal))
+                    key.SetValue(NextWeaponValueName, NextWeaponBinding, RegistryValueKind.String);
+                nextWeaponChanged = true;
+                return true;
+            }
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static void RestoreNextWeapon()
+    {
+        if (!nextWeaponChanged) return;
+        try
+        {
+            using (RegistryKey key = Registry.CurrentUser.OpenSubKey(BindingsPath, true))
+            {
+                if (key == null) return;
+                if (string.IsNullOrEmpty(originalNextWeapon))
+                    key.DeleteValue(NextWeaponValueName, false);
+                else
+                    key.SetValue(NextWeaponValueName, originalNextWeapon, RegistryValueKind.String);
+            }
+            nextWeaponChanged = false;
+        }
+        catch { }
+    }
+
     // Windows owns Alt+Tab, Alt+Esc and Alt+Space, so release Alt around those keys.
     private static void TapClearingAlt(ushort scan, bool altDown)
     {
@@ -254,6 +316,14 @@ internal static class DirectCombatController
             if (args[i] == "--startup-timeout") int.TryParse(args[i + 1], out startupTimeout);
         }
         startupTimeout = Math.Max(1, startupTimeout);
+        bool gameAlreadyRunning;
+        Process[] runningGames = Process.GetProcessesByName("witcher");
+        gameAlreadyRunning = runningGames.Length > 0;
+        foreach (Process running in runningGames) running.Dispose();
+        bool useGameNextWeapon = !gameAlreadyRunning && TryBindNextWeapon();
+        Console.WriteLine(useGameNextWeapon
+            ? "D-pad left uses the game's next weapon action; empty slots are skipped."
+            : "D-pad left uses explicit weapon slot keys.");
         // Clear Alt left down by a previous bridge that was killed while Alt was latched.
         SafeAltUp();
         Console.CancelKeyPress += delegate { SafeAltUp(); };
@@ -409,8 +479,15 @@ internal static class DirectCombatController
                 // D-pad left cycles the weapon in hand: steel, silver, extra.
                 if (active && left && !previousLeft)
                 {
-                    weaponIndex = (weaponIndex + 1) % Weapons.Length;
-                    Tap(Weapons[weaponIndex]);
+                    if (useGameNextWeapon)
+                    {
+                        Tap(NextWeaponScan);
+                    }
+                    else
+                    {
+                        weaponIndex = (weaponIndex + 1) % Weapons.Length;
+                        Tap(Weapons[weaponIndex]);
+                    }
                 }
                 previousLeft = left;
 
@@ -488,6 +565,7 @@ internal static class DirectCombatController
                 try { Mouse(LeftUp, 0, 0); } catch { }
                 leftMouseDown = false;
             }
+            RestoreNextWeapon();
             ReleaseHeld(held, ref signMouseDown);
             if (witcherProcess != null)
             {
