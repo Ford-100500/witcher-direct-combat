@@ -327,10 +327,10 @@ internal static class DirectCombatController
                 bool left = connected && Down(pad.Buttons, DLeft);
                 bool right = connected && Down(pad.Buttons, DRight);
 
-                if (active && menu && !previousMenu) Tap(PauseGame);
+                if (active && menu && !previousMenu) Tap(Escape);
                 previousMenu = menu;
 
-                if (active && back && !previousBack) Tap(Escape);
+                if (active && back && !previousBack) Tap(PauseGame);
                 previousBack = back;
 
                 // Left stick click sheathes or draws the sword last used.

@@ -29,8 +29,8 @@ The compile option builds [`DirectCombatController.cs`](Payload/DirectCombatCont
 | D-pad Left | Cycle weapon: steel, silver, extra weapon 1 |
 | D-pad Right | Cycle Sign: Aard, Quen, Yrden, Igni, Axii |
 | D-pad Down | Open the inventory |
-| View / Back | Esc: game menu, where the game can be saved |
-| Menu (hamburger) button | Pause or resume combat (Space) |
+| View / Back | Pause or resume combat (Space) |
+| Menu (hamburger) button | Esc: game menu, where the game can be saved |
 | RB or RT | Hold, then let go to cast the selected Sign |
 
 X attacks with the style chosen on D-pad Up; the bridge starts with the strong style, so X keeps hitting strong until you change it. The group style is reached with D-pad Up. Y waits 0.4 seconds after your last tap, then presses 6, 7 or 8: one tap uses the first quick slot, two quick taps the second, three the third. A sends a left click, which talks, picks up and uses, and also attacks when the cursor is on an enemy with the sword drawn. The left stick click presses the sword key last used, which sheathes it; the same press draws it again. The game may parry attacks made with a poor style match.
@@ -50,6 +50,6 @@ The controller source is [`Payload/DirectCombatController.cs`](Payload/DirectCom
 - D-pad Up changes the combat style immediately. The game may draw the sword when a style key is pressed.
 - The bridge uses controller slot 0. It waits up to 30 minutes for `witcher.exe` to start, because Steam shows three launch options and the choice can take a while. During play it reuses the controller input it already reads: after 30 seconds without controller input it checks whether the remembered Witcher process still exists, repeating only every 30 seconds while idle. A player can put the controller down and pick it up again while the game remains open. The bridge has a 24-hour maximum session length.
 - The launcher and controller program prevent a second bridge instance; an earlier beta launcher could start duplicates and make right-stick camera movement erratic.
-- The player confirmed the Menu button toggles combat pause on and off.
+- The View/Back button toggles combat pause; the Menu button opens the game menu.
 
 Bug reports and improvements are welcome. Please include the game version, controller type, camera view, and exact buttons pressed.
