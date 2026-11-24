@@ -1,6 +1,8 @@
 location.txt
+nextweapon.bak
 *.log
 bin/
 obj/
 .vs/
 *.user
+dist/
