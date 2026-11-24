@@ -237,7 +237,7 @@ internal static class DirectCombatController
         bool f3Selected = false;
         bool previousBack = false, previousLeftThumb = false;
         bool previousUp = false, previousDown = false, previousLeft = false, previousRight = false;
-        int styleIndex = 0, signIndex = Signs.Length - 1, weaponIndex = Weapons.Length - 1;
+        int styleIndex = 1, signIndex = Signs.Length - 1, weaponIndex = Weapons.Length - 1;
         ushort lastSword = Weapons[0];
         bool signMouseDown = false;
         Process witcherProcess = null;

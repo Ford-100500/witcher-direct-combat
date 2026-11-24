@@ -33,7 +33,7 @@ The compile option builds [`DirectCombatController.cs`](Payload/DirectCombatCont
 | Menu (hamburger) button | Pause or resume combat (Space) |
 | RB or RT | Hold, then let go to cast the selected Sign |
 
-X attacks with the style chosen on D-pad Up; Y always uses the group style. A sends a left click, which talks, picks up and uses, and also attacks when the cursor is on an enemy with the sword drawn. The left stick click presses the sword key last used, which sheathes it; the same press draws it again. The game may parry attacks made with a poor style match.
+X attacks with the style chosen on D-pad Up; the bridge starts with the strong style, so X keeps hitting strong until you change it. Y always uses the group style. A sends a left click, which talks, picks up and uses, and also attacks when the cursor is on an enemy with the sword drawn. The left stick click presses the sword key last used, which sheathes it; the same press draws it again. The game may parry attacks made with a poor style match.
 
 ## How it works
 
