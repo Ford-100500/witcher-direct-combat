@@ -89,7 +89,7 @@ internal static class DirectCombatController
     private const ushort LeftAlt = 0x38; // Alt
     private static readonly ushort[] Styles = { 0x2D, 0x2C, 0x2E }; // X fast, Z strong, C group
     private static readonly ushort[] Signs = { 0x02, 0x03, 0x04, 0x05, 0x06 }; // 1 Aard, 2 Quen, 3 Yrden, 4 Igni, 5 Axii
-    private static readonly ushort[] Weapons = { 0x10, 0x12, 0x13 }; // Q steel, E silver, R extra weapon 1
+    private static readonly ushort[] Weapons = { 0x10, 0x12, 0x13, 0x14, 0x16 }; // Q steel, E silver, R/T/U extra weapons 1-3
     private static readonly ushort[] QuickSlots = { 0x07, 0x08, 0x09 }; // 6, 7, 8: potions and bombs
     private static readonly Dictionary<char, ushort> MovementScans = new Dictionary<char, ushort>
     {
