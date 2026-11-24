@@ -6,11 +6,11 @@
 - Steam-версия **The Witcher: Enhanced Edition** (проверено на 1.4.5.1304).
 - Xbox-совместимый контроллер (XInput). Мод читает слот 0.
 - Права на запись в папку игры. Steam не должен обновлять игру во время установки.
-- Для сборки контроллера из исходников — .NET Framework 4. Обычно уже установлен вместе с Windows.
+- Для сборки контроллера из исходников и для работы `Setup.exe` — .NET Framework 4. В Windows 10/11 обычно уже установлен.
 
 ## Установка через Setup.exe
 
-Этот способ — для архива, который передают отдельно. Готовый `WitcherDirectCombatSetup.exe` не публикуется в репозитории и релизах; собрать его можно командой `installer\Build.ps1`.
+Скачай `WitcherDirectCombatSetup.exe` из [Releases](https://github.com/Ford-100500/witcher-direct-combat/releases/latest) или возьми из архива `WitcherDirectCombat-Setup-0.3.0.zip`.
 
 1. Закрой игру полностью.
 2. Запусти `WitcherDirectCombatSetup.exe`.
@@ -19,6 +19,8 @@
 5. Нажми **«Установить»**.
 
 Установщик кладёт те же файлы, что и `Install.cmd`: контроллер, `Play.cmd`, `installed.json` и `testtools.lua`. Если в игре был другой `testtools.lua`, он сохраняется как `testtools.lua.wdc-backup`.
+
+Собрать установщик самому: `installer\Build.ps1`.
 
 ## Установка через Install.cmd
 
@@ -44,7 +46,7 @@
 | Lua-хук | `System\Scripts\testtools.lua` |
 | Путь к игре | `location.txt` рядом с `Install.cmd` |
 
-Сохранения и `witcher.exe` не меняются. Если в игре уже лежит чужой `testtools.lua`, установщик откажется его перезаписывать.
+Сохранения и `witcher.exe` не меняются. Если в игре уже лежит чужой `testtools.lua`, `Install.cmd` откажется его перезаписывать, а `Setup.exe` сохранит его как `testtools.lua.wdc-backup`.
 
 ## Запуск
 

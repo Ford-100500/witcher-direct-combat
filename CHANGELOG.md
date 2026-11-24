@@ -11,7 +11,7 @@
 
 ### Примечание
 
-- Готовый `WitcherDirectCombatSetup.exe` **не входит** в репозиторий и релизы. Он собирается локально командой `installer\Build.ps1`.
+- Готовый `WitcherDirectCombatSetup.exe` не входит в git-репозиторий; он приложен к релизу `v0.3.0` вместе с `WitcherDirectCombat-Setup-0.3.0.zip`.
 
 ## 0.2.1 — 2026-11-25
 
