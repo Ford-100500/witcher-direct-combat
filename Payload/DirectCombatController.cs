@@ -198,6 +198,17 @@ internal static class DirectCombatController
         Tap(scan);
     }
 
+    // Never leave Alt logically pressed in Windows: release it without throwing.
+    private static void SafeAltUp()
+    {
+        try { Key(LeftAlt, false); } catch { }
+    }
+
+    private static void OnGameExited(object sender, EventArgs e)
+    {
+        SafeAltUp();
+    }
+
     // Windows owns Alt+Tab, Alt+Esc and Alt+Space, so release Alt around those keys.
     private static void TapClearingAlt(ushort scan, bool altDown)
     {
@@ -243,6 +254,11 @@ internal static class DirectCombatController
             if (args[i] == "--startup-timeout") int.TryParse(args[i + 1], out startupTimeout);
         }
         startupTimeout = Math.Max(1, startupTimeout);
+        // Clear Alt left down by a previous bridge that was killed while Alt was latched.
+        SafeAltUp();
+        Console.CancelKeyPress += delegate { SafeAltUp(); };
+        AppDomain.CurrentDomain.ProcessExit += delegate { SafeAltUp(); };
+        AppDomain.CurrentDomain.UnhandledException += delegate { SafeAltUp(); };
         Console.WriteLine("Witcher Direct Combat: controller slot {0}; press Ctrl+C to stop.", slot);
         Stopwatch clock = Stopwatch.StartNew();
         double deadline = duration;
@@ -271,6 +287,15 @@ internal static class DirectCombatController
                 if (witcherProcess == null && now >= nextStartupCheck)
                 {
                     witcherProcess = FindWitcherProcess();
+                    if (witcherProcess != null)
+                    {
+                        try
+                        {
+                            witcherProcess.EnableRaisingEvents = true;
+                            witcherProcess.Exited += OnGameExited;
+                        }
+                        catch { }
+                    }
                     nextStartupCheck = now + 1.0;
                 }
                 if (witcherProcess == null && now >= startupTimeout)
@@ -448,7 +473,11 @@ internal static class DirectCombatController
                 altDown = false;
             }
             ReleaseHeld(held, ref signMouseDown);
-            if (witcherProcess != null) witcherProcess.Dispose();
+            if (witcherProcess != null)
+            {
+                try { witcherProcess.Exited -= OnGameExited; } catch { }
+                witcherProcess.Dispose();
+            }
         }
         Console.WriteLine("Controller bridge stopped; held input released.");
         return 0;
