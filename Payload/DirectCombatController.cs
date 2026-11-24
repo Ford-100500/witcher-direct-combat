@@ -211,9 +211,22 @@ internal static class DirectCombatController
         try { Key(LeftAlt, false); } catch { }
     }
 
+    // Clear keys and mouse buttons a killed bridge may have left held down.
+    private static void SafeClearStuckInputs()
+    {
+        try
+        {
+            foreach (char direction in MovementScans.Keys) Key(MovementScans[direction], false);
+        }
+        catch { }
+        SafeAltUp();
+        try { Mouse(LeftUp, 0, 0); } catch { }
+        try { Mouse(RightUp, 0, 0); } catch { }
+    }
+
     private static void OnGameExited(object sender, EventArgs e)
     {
-        SafeAltUp();
+        SafeClearStuckInputs();
     }
 
     // Point the game's own "next weapon" action at K while the bridge runs, so it can
@@ -351,11 +364,11 @@ internal static class DirectCombatController
         Console.WriteLine(useGameNextWeapon
             ? "D-pad left uses the game's next weapon action; empty slots are skipped."
             : "D-pad left uses explicit weapon slot keys.");
-        // Clear Alt left down by a previous bridge that was killed while Alt was latched.
-        SafeAltUp();
-        Console.CancelKeyPress += delegate { SafeAltUp(); };
-        AppDomain.CurrentDomain.ProcessExit += delegate { SafeAltUp(); };
-        AppDomain.CurrentDomain.UnhandledException += delegate { SafeAltUp(); };
+        // Clear Alt and other input left down by a previous bridge that was killed.
+        SafeClearStuckInputs();
+        Console.CancelKeyPress += delegate { SafeClearStuckInputs(); };
+        AppDomain.CurrentDomain.ProcessExit += delegate { SafeClearStuckInputs(); };
+        AppDomain.CurrentDomain.UnhandledException += delegate { SafeClearStuckInputs(); };
         Console.WriteLine("Witcher Direct Combat: controller slot {0}; press Ctrl+C to stop.", slot);
         Stopwatch clock = Stopwatch.StartNew();
         double deadline = duration;

@@ -8,13 +8,14 @@
 - Remote: `upstream` → [VeggieVampire/witcher-direct-combat](https://github.com/VeggieVampire/witcher-direct-combat). `origin` не настроен — его нужно добавить после создания форка.
 - История: оригинальный коммит Nick Farrow + коммиты форка.
 - Рабочее дерево чистое; `location.txt`, `nextweapon.bak` и логи в `.gitignore`.
-- Версия в `CHANGELOG.md`: 0.2.0.
+- Версия в `CHANGELOG.md`: 0.2.1.
 
 ## Что подготовлено
 
 - `README.md` — описание мода, изменения форка, требования, управление, ограничения.
 - `docs/CONTROLS.md` — полная карта управления.
 - `docs/INSTALL.md` — установка, проверка, обновление, удаление, частые проблемы.
+- `docs/KNOWN-ISSUES.md` — честный список ограничений и хрупких мест.
 - `CHANGELOG.md` — изменения относительно оригинала.
 - `LICENSE` — MIT с сохранённым копирайтом Nick Farrow.
 - `.gitignore`, `.gitattributes`.
@@ -81,7 +82,7 @@ git push -u origin main
 
 - Заполни описание и темы: `witcher`, `mod`, `gamepad`, `xinput`, `the-witcher-1`.
 - Проверь, что GitHub корректно показывает README и ссылки на `docs/`.
-- При желании сделай релиз `v0.2.0`.
+- При желании сделай релиз `v0.2.1`.
 
 Состав ZIP для релиза:
 
