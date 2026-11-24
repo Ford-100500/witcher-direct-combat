@@ -238,7 +238,8 @@ internal static class DirectCombatController
         bool previousBack = false, previousLeftThumb = false;
         bool previousUp = false, previousDown = false, previousLeft = false, previousRight = false;
         int styleIndex = 1, signIndex = Signs.Length - 1, weaponIndex = Weapons.Length - 1;
-        int quickSlotIndex = QuickSlots.Length - 1;
+        int quickTaps = 0;
+        double quickTapDeadline = 0;
         ushort lastSword = Weapons[0];
         bool signMouseDown = false;
         Process witcherProcess = null;
@@ -368,11 +369,18 @@ internal static class DirectCombatController
                 if (active && x && !previousX) Attack(Styles[styleIndex]);
                 if (active && y && !previousY)
                 {
-                    quickSlotIndex = (quickSlotIndex + 1) % QuickSlots.Length;
-                    Tap(QuickSlots[quickSlotIndex]);
+                    if (quickTaps < QuickSlots.Length) quickTaps++;
+                    quickTapDeadline = now + 0.4;
                 }
                 if (active && a && !previousA) Click(); // Talk, pick up, use
                 previousX = x; previousY = y; previousA = a;
+
+                // 1 tap uses slot 6, 2 quick taps slot 7, 3 quick taps slot 8.
+                if (quickTaps > 0 && now >= quickTapDeadline)
+                {
+                    if (active) Tap(QuickSlots[quickTaps - 1]);
+                    quickTaps = 0;
+                }
 
                 bool signCast = connected && (Down(pad.Buttons, RB) || pad.RightTrigger >= TriggerThreshold);
                 if (active && signCast && !previousSignCast && !signMouseDown)

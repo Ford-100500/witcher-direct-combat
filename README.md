@@ -21,7 +21,7 @@ The compile option builds [`DirectCombatController.cs`](Payload/DirectCombatCont
 | Left stick | Move Geralt (F3 view) |
 | Right stick | Turn the camera / cursor in F3 view |
 | X | Attack with the selected style |
-| Y | Use the next quick slot: potion or bomb (keys 6, 7, 8 in rotation) |
+| Y | Quick slots: one tap uses potion/bomb 6, two quick taps 7, three quick taps 8 |
 | A | Interact: talk, pick up, use |
 | B + left stick direction | Dodge in that direction |
 | Left stick click | Sheathe or draw the last used sword |
@@ -33,7 +33,7 @@ The compile option builds [`DirectCombatController.cs`](Payload/DirectCombatCont
 | Menu (hamburger) button | Pause or resume combat (Space) |
 | RB or RT | Hold, then let go to cast the selected Sign |
 
-X attacks with the style chosen on D-pad Up; the bridge starts with the strong style, so X keeps hitting strong until you change it. The group style is reached with D-pad Up. Y presses quick slot 6, 7 and 8 in rotation, which uses potions and bombs from the quick slots. A sends a left click, which talks, picks up and uses, and also attacks when the cursor is on an enemy with the sword drawn. The left stick click presses the sword key last used, which sheathes it; the same press draws it again. The game may parry attacks made with a poor style match.
+X attacks with the style chosen on D-pad Up; the bridge starts with the strong style, so X keeps hitting strong until you change it. The group style is reached with D-pad Up. Y waits 0.4 seconds after your last tap, then presses 6, 7 or 8: one tap uses the first quick slot, two quick taps the second, three the third. A sends a left click, which talks, picks up and uses, and also attacks when the cursor is on an enemy with the sword drawn. The left stick click presses the sword key last used, which sheathes it; the same press draws it again. The game may parry attacks made with a poor style match.
 
 ## How it works
 
