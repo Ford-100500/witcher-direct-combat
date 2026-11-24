@@ -253,6 +253,23 @@ internal static class DirectCombatController
         }
     }
 
+    private static bool IsNextWeaponBoundToK()
+    {
+        try
+        {
+            using (RegistryKey key = Registry.CurrentUser.OpenSubKey(BindingsPath, false))
+            {
+                if (key == null) return false;
+                object value = key.GetValue(NextWeaponValueName);
+                return value != null && string.Equals(value.ToString(), NextWeaponBinding, StringComparison.Ordinal);
+            }
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     private static void RestoreNextWeapon()
     {
         if (!nextWeaponChanged) return;
@@ -320,7 +337,17 @@ internal static class DirectCombatController
         Process[] runningGames = Process.GetProcessesByName("witcher");
         gameAlreadyRunning = runningGames.Length > 0;
         foreach (Process running in runningGames) running.Dispose();
-        bool useGameNextWeapon = !gameAlreadyRunning && TryBindNextWeapon();
+        bool useGameNextWeapon;
+        if (gameAlreadyRunning)
+        {
+            // A bridge that is restarting while the game runs may already have bound K.
+            useGameNextWeapon = IsNextWeaponBoundToK();
+            if (useGameNextWeapon) TryBindNextWeapon();
+        }
+        else
+        {
+            useGameNextWeapon = TryBindNextWeapon();
+        }
         Console.WriteLine(useGameNextWeapon
             ? "D-pad left uses the game's next weapon action; empty slots are skipped."
             : "D-pad left uses explicit weapon slot keys.");
@@ -468,15 +495,11 @@ internal static class DirectCombatController
                 if (active && leftThumb && !previousLeftThumb) Tap(Map);
                 previousLeftThumb = leftThumb;
 
-                // D-pad up cycles the combat style: fast, strong, group.
-                if (active && up && !previousUp)
-                {
-                    styleIndex = (styleIndex + 1) % Styles.Length;
-                    Tap(Styles[styleIndex]);
-                }
+                // D-pad up opens the inventory.
+                if (active && up && !previousUp) Tap(Inventory);
                 previousUp = up;
 
-                // D-pad left cycles the weapon in hand: steel, silver, extra.
+                // D-pad left asks the game for the next available weapon.
                 if (active && left && !previousLeft)
                 {
                     if (useGameNextWeapon)
@@ -491,16 +514,20 @@ internal static class DirectCombatController
                 }
                 previousLeft = left;
 
-                // D-pad right cycles the selected Sign.
+                // D-pad right cycles the combat style: fast, strong, group.
                 if (active && right && !previousRight)
+                {
+                    styleIndex = (styleIndex + 1) % Styles.Length;
+                    Tap(Styles[styleIndex]);
+                }
+                previousRight = right;
+
+                // D-pad down cycles the selected Sign.
+                if (active && down && !previousDown)
                 {
                     signIndex = (signIndex + 1) % Signs.Length;
                     Tap(Signs[signIndex]);
                 }
-                previousRight = right;
-
-                // D-pad down opens the inventory.
-                if (active && down && !previousDown) Tap(Inventory);
                 previousDown = down;
 
                 if (active && x && !previousX) Attack(Styles[styleIndex]);
