@@ -64,6 +64,8 @@ internal static class DirectCombatController
     private static extern uint SendInput(uint count, Input[] inputs, int size);
     [DllImport("user32.dll")]
     private static extern IntPtr GetForegroundWindow();
+    [DllImport("user32.dll")]
+    private static extern uint GetWindowThreadProcessId(IntPtr window, out uint processId);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     private static extern int GetWindowText(IntPtr window, StringBuilder text, int max);
 
@@ -71,6 +73,7 @@ internal static class DirectCombatController
     private const ushort Menu = 0x0010;
     private const ushort DUp = 0x0001, DDown = 0x0002, DLeft = 0x0004, DRight = 0x0008;
     private const ushort LB = 0x0100, RB = 0x0200;
+    private const ushort Back = 0x0020, LeftThumb = 0x0040;
     private const uint ScanCode = 0x0008, KeyUp = 0x0002;
     private const uint MouseMove = 0x0001, LeftDown = 0x0002, LeftUp = 0x0004;
     private const uint RightDown = 0x0008, RightUp = 0x0010;
@@ -78,6 +81,12 @@ internal static class DirectCombatController
     private const int TriggerThreshold = 96;
     private const ushort OverShoulderCamera = 0x3D; // F3
     private const ushort PauseGame = 0x39; // Space
+    private const ushort Escape = 0x01; // Esc
+    private const ushort Inventory = 0x17; // I
+    private const ushort GroupStyle = 0x2E; // C
+    private static readonly ushort[] Styles = { 0x2D, 0x2C, 0x2E }; // X fast, Z strong, C group
+    private static readonly ushort[] Signs = { 0x02, 0x03, 0x04, 0x05, 0x06 }; // 1 Aard, 2 Quen, 3 Yrden, 4 Igni, 5 Axii
+    private static readonly ushort[] Weapons = { 0x10, 0x12, 0x13 }; // Q steel, E silver, R extra weapon 1
     private static readonly Dictionary<char, ushort> MovementScans = new Dictionary<char, ushort>
     {
         { 'W', 0x11 }, { 'A', 0x1E }, { 'S', 0x1F }, { 'D', 0x20 }
@@ -123,6 +132,17 @@ internal static class DirectCombatController
         StringBuilder text = new StringBuilder(256);
         GetWindowText(GetForegroundWindow(), text, text.Capacity);
         return text.ToString();
+    }
+
+    // Match the game window by owning process so localized titles ("Ведьмак", "The Witcher")
+    // and title changes during loading both work.
+    private static bool IsWitcherActive(Process witcherProcess)
+    {
+        if (witcherProcess == null) return false;
+        uint foregroundProcess;
+        GetWindowThreadProcessId(GetForegroundWindow(), out foregroundProcess);
+        if (foregroundProcess == (uint)witcherProcess.Id) return true;
+        return ForegroundTitle().StartsWith("The Witcher (", StringComparison.Ordinal);
     }
 
     private static bool Down(ushort buttons, ushort mask) { return (buttons & mask) != 0; }
@@ -198,7 +218,7 @@ internal static class DirectCombatController
         }
         int slot = 0;
         int duration = 86400;
-        int startupTimeout = 30;
+        int startupTimeout = 1800;
         for (int i = 0; i + 1 < args.Length; i++)
         {
             if (args[i] == "--slot") int.TryParse(args[i + 1], out slot);
@@ -210,21 +230,23 @@ internal static class DirectCombatController
         Stopwatch clock = Stopwatch.StartNew();
         double deadline = duration;
         double previousTick = clock.Elapsed.TotalSeconds;
-        double quickCastUntil = 0;
         double remainderX = 0, remainderY = 0;
         bool previousX = false, previousY = false, previousA = false, previousB = false;
         bool previousMenu = false;
-        bool previousLT = false, previousSignCast = false;
+        bool previousSignCast = false;
         bool f3Selected = false;
-        ushort previousSignButtons = 0;
-        bool signMouseDown = false, nextSteel = true;
+        bool previousBack = false, previousLeftThumb = false;
+        bool previousUp = false, previousDown = false, previousLeft = false, previousRight = false;
+        int styleIndex = 0, signIndex = Signs.Length - 1, weaponIndex = Weapons.Length - 1;
+        ushort lastSword = Weapons[0];
+        bool signMouseDown = false;
         Process witcherProcess = null;
         double nextStartupCheck = 0, lastControllerInput = 0, nextIdleCheck = 30;
         bool wasIdle = false;
         HashSet<char> held = new HashSet<char>();
         try
         {
-            while (clock.Elapsed.TotalSeconds < deadline || quickCastUntil > clock.Elapsed.TotalSeconds)
+            while (clock.Elapsed.TotalSeconds < deadline)
             {
                 double now = clock.Elapsed.TotalSeconds;
                 if (witcherProcess == null && now >= nextStartupCheck)
@@ -266,7 +288,7 @@ internal static class DirectCombatController
                     nextIdleCheck = now + 30;
                     wasIdle = true;
                 }
-                bool active = connected && witcherProcess != null && ForegroundTitle().StartsWith("The Witcher (");
+                bool active = connected && IsWitcherActive(witcherProcess);
                 HashSet<char> wanted = active ? WantedMovement(pad, held) : new HashSet<char>();
                 foreach (char key in held) if (!wanted.Contains(key)) Key(MovementScans[key], false);
                 foreach (char key in wanted) if (!held.Contains(key)) Key(MovementScans[key], true);
@@ -296,48 +318,67 @@ internal static class DirectCombatController
                 bool a = connected && Down(pad.Buttons, A);
                 bool b = connected && Down(pad.Buttons, B);
                 bool menu = connected && Down(pad.Buttons, Menu);
+                bool back = connected && Down(pad.Buttons, Back);
+                bool leftThumb = connected && Down(pad.Buttons, LeftThumb);
+                bool up = connected && Down(pad.Buttons, DUp);
+                bool down = connected && Down(pad.Buttons, DDown);
+                bool left = connected && Down(pad.Buttons, DLeft);
+                bool right = connected && Down(pad.Buttons, DRight);
+
                 if (active && menu && !previousMenu) Tap(PauseGame);
                 previousMenu = menu;
-                if (active && x && !previousX) Attack(0x2C); // Z: Strong
-                if (active && y && !previousY) Attack(0x2E); // C: Group
-                if (active && a && !previousA) Attack(0x2D); // X: Fast
+
+                if (active && back && !previousBack) Tap(Escape);
+                previousBack = back;
+
+                // Left stick click sheathes or draws the sword last used.
+                if (active && leftThumb && !previousLeftThumb) Tap(lastSword);
+                previousLeftThumb = leftThumb;
+
+                // D-pad up cycles the combat style: fast, strong, group.
+                if (active && up && !previousUp)
+                {
+                    styleIndex = (styleIndex + 1) % Styles.Length;
+                    Tap(Styles[styleIndex]);
+                }
+                previousUp = up;
+
+                // D-pad left cycles the weapon in hand: steel, silver, extra.
+                if (active && left && !previousLeft)
+                {
+                    weaponIndex = (weaponIndex + 1) % Weapons.Length;
+                    lastSword = Weapons[weaponIndex];
+                    Tap(lastSword);
+                }
+                previousLeft = left;
+
+                // D-pad right cycles the selected Sign.
+                if (active && right && !previousRight)
+                {
+                    signIndex = (signIndex + 1) % Signs.Length;
+                    Tap(Signs[signIndex]);
+                }
+                previousRight = right;
+
+                // D-pad down opens the inventory.
+                if (active && down && !previousDown) Tap(Inventory);
+                previousDown = down;
+
+                if (active && x && !previousX) Attack(Styles[styleIndex]);
+                if (active && y && !previousY) Attack(GroupStyle);
+                if (active && a && !previousA) Click(); // Talk, pick up, use
                 previousX = x; previousY = y; previousA = a;
 
-                bool lt = connected && pad.LeftTrigger >= TriggerThreshold;
-                if (active && lt && !previousLT)
-                {
-                    Tap(nextSteel ? (ushort)0x10 : (ushort)0x13); // Q: steel, R: extra weapon 1
-                    nextSteel = !nextSteel;
-                }
-                previousLT = lt;
-
-                ushort signButtons = connected ? pad.Buttons : (ushort)0;
-                if (active)
-                {
-                    if (Down(signButtons, DUp) && !Down(previousSignButtons, DUp))
-                    {
-                        SelectSign(0x02); // 1: Aard
-                        Thread.Sleep(50);
-                        if (!signMouseDown) { Mouse(RightDown, 0, 0); signMouseDown = true; }
-                        quickCastUntil = clock.Elapsed.TotalSeconds + 1.0;
-                    }
-                    if (Down(signButtons, DRight) && !Down(previousSignButtons, DRight)) SelectSign(0x05); // 4: Igni
-                    if (Down(signButtons, DDown) && !Down(previousSignButtons, DDown)) SelectSign(0x04); // 3: Yrden
-                    if (Down(signButtons, DLeft) && !Down(previousSignButtons, DLeft)) SelectSign(0x03); // 2: Quen
-                    if (Down(signButtons, LB) && !Down(previousSignButtons, LB)) SelectSign(0x06); // 5: Axii
-                }
-                previousSignButtons = signButtons;
                 bool signCast = connected && (Down(pad.Buttons, RB) || pad.RightTrigger >= TriggerThreshold);
                 if (active && signCast && !previousSignCast && !signMouseDown)
                 {
                     Mouse(RightDown, 0, 0);
                     signMouseDown = true;
                 }
-                if (signMouseDown && (!active || (!signCast && clock.Elapsed.TotalSeconds >= quickCastUntil)))
+                if (signMouseDown && (!active || !signCast))
                 {
                     Mouse(RightUp, 0, 0);
                     signMouseDown = false;
-                    quickCastUntil = 0;
                 }
                 previousSignCast = signCast;
 

@@ -7,6 +7,6 @@ if not exist "%GAME%\System\witcher.exe" (
   exit /b 1
 )
 tasklist /FI "IMAGENAME eq DirectCombatController.exe" /FO CSV /NH 2>nul | find /I "DirectCombatController.exe" >nul
-if errorlevel 1 start "Witcher Direct Combat" /min "%~dp0DirectCombatController.exe" --slot 0 --duration 86400
+if errorlevel 1 start "Witcher Direct Combat" /min "%~dp0DirectCombatController.exe" --slot 0 --duration 86400 --startup-timeout 1800
 tasklist /FI "IMAGENAME eq witcher.exe" /NH 2>nul | find /I "witcher.exe" >nul
-if errorlevel 1 start "" /D "%GAME%\System" "%GAME%\System\witcher.exe"
+if errorlevel 1 start "" "steam://rungameid/20900"
