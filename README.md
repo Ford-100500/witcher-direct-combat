@@ -1,55 +1,111 @@
-# Witcher Direct Combat
+# Witcher Direct Combat — форк с переработанным управлением
 
-An experimental controller and combat mod for **The Witcher: Enhanced Edition** on Windows. This beta widens the game's sword combo timing window and maps an Xbox controller to movement, camera, sword styles, dodging, and Signs. You can press an attack button repeatedly without watching for the flaming sword cursor. The installer offers a bundled unsigned controller executable or the option to compile it from source on your PC.
+Геймпадный мод для **The Witcher: Enhanced Edition** (Steam, версия игры 1.4.5.1304). Расширяет окно комбо и даёт полноценное управление Xbox-контроллером: движение, камера, стили боя, оружие, знаки, зелья, карта, меню и подсветка объектов.
 
-This is an early community beta, not a replacement for The Witcher 1 combat engine. The game still chooses targets under the cursor, resolves hits and parries, and plays its original attack animations. There is no lock-on targeting. It has been tested with the Steam build whose game window reports `1.4.5.1304`, in F3 over-the-shoulder view.
+> Это форк проекта [Witcher Direct Combat](https://github.com/VeggieVampire/witcher-direct-combat).
+> Оригинальный мод и его код написал **Nick Farrow** (GitHub: **VeggieVampire**).
+> Оригинал распространяется по лицензии MIT; она сохранена в этом репозитории.
+> Всё, что изменено в этом форке, перечислено в разделе «Что изменено».
 
-## Download and install
+## Что делает мод
 
-1. Download the repository as a ZIP from GitHub and extract it.
-2. Close Witcher completely.
-3. Double-click `Install.cmd`. The first prompt defaults to **P** so you can paste your game folder path; choose **S** to search common Steam library locations. Spaces and surrounding quotes are accepted. The installer verifies `System\witcher.exe` and asks you to confirm the exact folder.
-4. Choose **U** to install the bundled unsigned controller executable (default), or **C** to compile the included C# source yourself.
-5. Double-click `DirectCombat\Play.cmd` inside the game folder. It starts the controller bridge and launches the game through Steam; choose **Play The Witcher** in Steam's launch options.
+- Расширяет окно тайминга мечевого комбо, чтобы можно было жать атаку не глядя на «пламенный» курсор.
+- Читает XInput и отправляет игре её собственные клавиши и клики мыши.
+- Работает только когда окно «Ведьмака» в фокусе, поэтому не мешает другим приложениям.
+- Не меняет сохранения и `witcher.exe`. Установка обратима.
 
-The compile option builds [`DirectCombatController.cs`](Payload/DirectCombatController.cs) with the Windows .NET Framework C# compiler. The bundled executable is built from that same source and is not digitally signed. Both options install our `testtools.lua` and launcher. The installer refuses to overwrite an existing `System\Scripts\testtools.lua` that differs from ours. It does not change saves or the game executable. It saves the verified game path as `location.txt` beside `Install.cmd` and `Uninstall.cmd` in the extracted installer folder. Keep that folder until you uninstall. To remove the beta, run `Uninstall.cmd`; it reads `location.txt`, waits for Witcher to close if needed, stops the installed controller bridge, and removes only files that still match the install manifest.
+Игра при этом остаётся обычным «Ведьмаком»: цели выбираются курсором, удары и парирования считает оригинальный движок.
 
-## Controller layout
+## Что изменено в этом форке
 
-| Input | Action |
+- Игра запускается **через Steam** (`steam://rungameid/20900`), а не напрямую. Прямой запуск `witcher.exe` в Steam-версии сразу закрывается.
+- Мод понимает русское окно `Ведьмак (...)` — раньше он ждал только `The Witcher (...)` и выключался.
+- Контроллер ждёт игру до 30 минут: Steam показывает меню из трёх вариантов запуска, и выбор может занять время.
+- Переработана раскладка: D-pad для стилей, оружия, знаков и инвентаря; LB — ножны; LS — карта; RB/RS — Alt; Menu/Back поменяны местами.
+- Y использует быстрые слоты зелий и бомб по количеству нажатий.
+- Alt можно держать сколько нужно: RB держит его, RS включает и выключает фиксацию.
+
+## Управление
+
+Полная карта со всеми оговорками — в [docs/CONTROLS.md](docs/CONTROLS.md).
+
+| Кнопка | Действие |
 | --- | --- |
-| Left stick | Move Geralt (F3 view) |
-| Right stick | Turn the camera / cursor in F3 view |
-| X | Attack with the selected style |
-| Y | Quick slots: one tap uses potion/bomb 6, two quick taps 7, three quick taps 8 |
-| A | Interact: talk, pick up, use |
-| B + left stick direction | Dodge in that direction |
-| Left stick click | Sheathe or draw the last used sword |
-| D-pad Up | Cycle combat style: fast, strong, group |
-| D-pad Left | Cycle weapon: steel, silver, extra weapon 1 |
-| D-pad Right | Cycle Sign: Aard, Quen, Yrden, Igni, Axii |
-| D-pad Down | Open the inventory |
-| View / Back | Pause or resume combat (Space) |
-| Menu (hamburger) button | Esc: game menu, where the game can be saved |
-| RB or RT | Hold, then let go to cast the selected Sign |
+| Левый стик | Движение |
+| Нажатие LS | Карта (`M`) |
+| Правый стик | Камера |
+| Нажатие RS | Включить/выключить фиксацию Alt |
+| A | Взаимодействие: поговорить, подобрать, использовать |
+| X | Удар выбранным стилем (старт — силовой) |
+| Y | Быстрые слоты: 1 нажатие — 6, 2 — 7, 3 — 8 |
+| B + стик | Уклонение в сторону стика |
+| LB | Убрать/достать меч (`Tab`) |
+| RB | Alt, пока кнопка зажата (подсветка объектов и NPC) |
+| RT | Удерживать и отпустить — знак |
+| D-pad ↑ | Стиль: сильный → групповой → быстрый |
+| D-pad ← | Оружие: сталь → серебро → доп. оружие |
+| D-pad → | Знак: Аард → Квен → Ирден → Игни → Аксий |
+| D-pad ↓ | Инвентарь (`I`) |
+| Menu (☰) | Esc — меню игры, там сохранение |
+| View / Back | Пауза боя (`Space`) |
 
-X attacks with the style chosen on D-pad Up; the bridge starts with the strong style, so X keeps hitting strong until you change it. The group style is reached with D-pad Up. Y waits 0.4 seconds after your last tap, then presses 6, 7 or 8: one tap uses the first quick slot, two quick taps the second, three the third. A sends a left click, which talks, picks up and uses, and also attacks when the cursor is on an enemy with the sword drawn. The left stick click presses the sword key last used, which sheathes it; the same press draws it again. The game may parry attacks made with a poor style match.
+LT сейчас свободна — оставлена под будущее радиальное меню.
 
-## How it works
+## Требования
 
-The controller bridge reads XInput and sends the game's existing keyboard and mouse commands while the Witcher window is in the foreground. The window is matched by its owning process, so localized titles such as `Ведьмак (...)` work. The Lua startup hook sets `g_cAuroraSettings.m_bUseOldAttackMechanics = true` and `g_cAuroraSettings.m_fCombatTimeAdvance = 10.0`. The wider timing window is what lets repeated presses continue the flaming combo without watching its cue. Game behavior and balance outside the tested fights may vary.
+- 64-битная Windows.
+- Steam-версия The Witcher: Enhanced Edition.
+- Xbox-совместимый контроллер (XInput), слот 0.
+- .NET Framework 4 — для сборки контроллера из исходников. Готовая сборка уже лежит в `Payload`.
 
-The controller source is [`Payload/DirectCombatController.cs`](Payload/DirectCombatController.cs). The Lua source is [`Payload/testtools.lua`](Payload/testtools.lua). The package contains a prebuilt unsigned controller executable and no original game files. Source code is MIT licensed; The Witcher and its assets belong to their respective owners.
+## Установка
 
-## Known limitations
+Подробный гайд с проверкой и удалением — в [docs/INSTALL.md](docs/INSTALL.md).
 
-- Requires 64-bit Windows and an XInput controller. Compiling from source also requires the .NET Framework 4 C# compiler. The bridge requests F3 over-the-shoulder view once when Witcher first becomes active; the player confirmed the right stick turns the camera normally in F3. If you change camera views later, press F3 on the keyboard to return.
-- The game can still parry or miss; Fast style landed more hits than Strong against one agile test enemy.
-- The dodge needs a sword drawn and may require holding B while moving the stick.
-- Sheathing presses the sword key the bridge last sent. If the sword is changed with the keyboard or an in-game menu, the first left stick click may switch weapons instead of sheathing; click again to sheathe.
-- D-pad Up changes the combat style immediately. The game may draw the sword when a style key is pressed.
-- The bridge uses controller slot 0. It waits up to 30 minutes for `witcher.exe` to start, because Steam shows three launch options and the choice can take a while. During play it reuses the controller input it already reads: after 30 seconds without controller input it checks whether the remembered Witcher process still exists, repeating only every 30 seconds while idle. A player can put the controller down and pick it up again while the game remains open. The bridge has a 24-hour maximum session length.
-- The launcher and controller program prevent a second bridge instance; an earlier beta launcher could start duplicates and make right-stick camera movement erratic.
-- The View/Back button toggles combat pause; the Menu button opens the game menu.
+Коротко:
 
-Bug reports and improvements are welcome. Please include the game version, controller type, camera view, and exact buttons pressed.
+1. Закрой игру полностью.
+2. Запусти `Install.cmd`.
+3. Укажи папку игры (вставить путь или найти автоматически) и выбери `U` — готовая сборка контроллера.
+4. Запускай игру через `DirectCombat\Play.cmd` (или ярлык на него).
+5. В меню Steam выбери **Play The Witcher**.
+
+`Play.cmd` сам поднимает контроллер и открывает игру через Steam. Мод включится, когда окно игры станет активным.
+
+## Как это работает
+
+`DirectCombatController.exe` опрашивает XInput и отправляет игре клавиши и движения мыши, пока окно игры в фокусе. Окно определяется по процессу `witcher.exe`, поэтому локализованные заголовки не мешают.
+
+`System\Scripts\testtools.lua` выполняется при старте игры и задаёт:
+
+```lua
+g_cAuroraSettings.m_bUseOldAttackMechanics = true
+g_cAuroraSettings.m_fCombatTimeAdvance = 10.0
+```
+
+Это и расширяет окно комбо. Исходники: `Payload/DirectCombatController.cs` и `Payload/testtools.lua`.
+
+## Ограничения и предупреждения
+
+- **Alt и системные сочетания.** Windows забирает `Alt+Tab`, `Alt+Esc` и `Alt+Space`. Мод отпускает Alt на время этих клавиш, но не стоит специально жать их при зажатом Alt.
+- Если процесс контроллера убить принудительно с включённой фиксацией Alt, Alt может «залипнуть» в системе. Нажми и отпусти Alt на клавиатуре.
+- Y использует текущее зелье/бомбу из слота. Слот не меняется, пока предмет не потратится — поэтому слот и выбирается количеством нажатий.
+- Смена стиля может достать меч: игра сама реагирует на клавишу стиля.
+- Уклонение требует достаточного меча.
+- Игра всё ещё может парировать или промахнуться; стиль под противника важен.
+- Контроллер работает 24 часа за запуск; после закрытия игры выходит сам.
+- Антивирус может ругаться на неподписанный `DirectCombatController.exe` — это ожидаемо для самосборного мода.
+
+## Планы
+
+- Нативное радиальное меню на удержание LT: пауза, выбор левым стиком (зелья, бомбы, знаки, оружие и стиль).
+- Управление инвентарём и переключение вкладок (инвентарь, персонаж, карта, журнал, алхимия).
+- Доработка быстрых слотов, если понадобится выбор без счётчика нажатий.
+
+## Лицензия и благодарности
+
+- Оригинальный мод: **Nick Farrow** (GitHub: [VeggieVampire](https://github.com/VeggieVampire)), [репозиторий](https://github.com/VeggieVampire/witcher-direct-combat).
+- Лицензия: MIT, см. [LICENSE](LICENSE). Уведомление об авторских правах сохранено.
+- The Witcher и её ассеты принадлежат CD PROJEKT RED. В репозитории нет файлов игры.
+
+История изменений форка — в [CHANGELOG.md](CHANGELOG.md). Подготовка к публикации — в [docs/PUBLISHING.md](docs/PUBLISHING.md).

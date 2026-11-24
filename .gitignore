@@ -1,0 +1,6 @@
+location.txt
+*.log
+bin/
+obj/
+.vs/
+*.user

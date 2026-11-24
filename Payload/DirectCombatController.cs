@@ -1,4 +1,5 @@
 // Witcher Direct Combat beta controller bridge. Compile with the Windows .NET Framework C# compiler.
+// Original mod by Nick Farrow (GitHub: VeggieVampire): https://github.com/VeggieVampire/witcher-direct-combat
 // Copyright (c) 2026 Witcher Direct Combat contributors. MIT license; see LICENSE.
 using System;
 using System.Collections.Generic;
@@ -73,7 +74,7 @@ internal static class DirectCombatController
     private const ushort Menu = 0x0010;
     private const ushort DUp = 0x0001, DDown = 0x0002, DLeft = 0x0004, DRight = 0x0008;
     private const ushort LB = 0x0100, RB = 0x0200;
-    private const ushort Back = 0x0020, LeftThumb = 0x0040;
+    private const ushort Back = 0x0020, LeftThumb = 0x0040, RightThumb = 0x0080;
     private const uint ScanCode = 0x0008, KeyUp = 0x0002;
     private const uint MouseMove = 0x0001, LeftDown = 0x0002, LeftUp = 0x0004;
     private const uint RightDown = 0x0008, RightUp = 0x0010;
@@ -82,7 +83,10 @@ internal static class DirectCombatController
     private const ushort OverShoulderCamera = 0x3D; // F3
     private const ushort PauseGame = 0x39; // Space
     private const ushort Escape = 0x01; // Esc
+    private const ushort Tab = 0x0F; // Tab
     private const ushort Inventory = 0x17; // I
+    private const ushort Map = 0x32; // M
+    private const ushort LeftAlt = 0x38; // Alt
     private static readonly ushort[] Styles = { 0x2D, 0x2C, 0x2E }; // X fast, Z strong, C group
     private static readonly ushort[] Signs = { 0x02, 0x03, 0x04, 0x05, 0x06 }; // 1 Aard, 2 Quen, 3 Yrden, 4 Igni, 5 Axii
     private static readonly ushort[] Weapons = { 0x10, 0x12, 0x13 }; // Q steel, E silver, R extra weapon 1
@@ -194,6 +198,19 @@ internal static class DirectCombatController
         Tap(scan);
     }
 
+    // Windows owns Alt+Tab, Alt+Esc and Alt+Space, so release Alt around those keys.
+    private static void TapClearingAlt(ushort scan, bool altDown)
+    {
+        if (!altDown)
+        {
+            Tap(scan);
+            return;
+        }
+        Key(LeftAlt, false);
+        Tap(scan);
+        Key(LeftAlt, true);
+    }
+
     private static void ReleaseHeld(HashSet<char> held, ref bool signMouseDown)
     {
         foreach (char direction in held) Key(MovementScans[direction], false);
@@ -232,15 +249,15 @@ internal static class DirectCombatController
         double previousTick = clock.Elapsed.TotalSeconds;
         double remainderX = 0, remainderY = 0;
         bool previousX = false, previousY = false, previousA = false, previousB = false;
-        bool previousMenu = false;
+        bool previousMenu = false, previousLB = false;
         bool previousSignCast = false;
         bool f3Selected = false;
-        bool previousBack = false, previousLeftThumb = false;
+        bool previousBack = false, previousLeftThumb = false, previousRightThumb = false;
         bool previousUp = false, previousDown = false, previousLeft = false, previousRight = false;
+        bool altLatch = false, altDown = false;
         int styleIndex = 1, signIndex = Signs.Length - 1, weaponIndex = Weapons.Length - 1;
         int quickTaps = 0;
         double quickTapDeadline = 0;
-        ushort lastSword = Weapons[0];
         bool signMouseDown = false;
         Process witcherProcess = null;
         double nextStartupCheck = 0, lastControllerInput = 0, nextIdleCheck = 30;
@@ -321,20 +338,38 @@ internal static class DirectCombatController
                 bool b = connected && Down(pad.Buttons, B);
                 bool menu = connected && Down(pad.Buttons, Menu);
                 bool back = connected && Down(pad.Buttons, Back);
+                bool lb = connected && Down(pad.Buttons, LB);
+                bool rb = connected && Down(pad.Buttons, RB);
                 bool leftThumb = connected && Down(pad.Buttons, LeftThumb);
+                bool rightThumb = connected && Down(pad.Buttons, RightThumb);
                 bool up = connected && Down(pad.Buttons, DUp);
                 bool down = connected && Down(pad.Buttons, DDown);
                 bool left = connected && Down(pad.Buttons, DLeft);
                 bool right = connected && Down(pad.Buttons, DRight);
 
-                if (active && menu && !previousMenu) Tap(Escape);
+                // RS click latches Alt until pressed again; RB holds Alt while held.
+                if (active && rightThumb && !previousRightThumb) altLatch = !altLatch;
+                previousRightThumb = rightThumb;
+                if (!active) altLatch = false;
+                bool altWanted = active && (rb || altLatch);
+                if (altWanted != altDown)
+                {
+                    Key(LeftAlt, altWanted);
+                    altDown = altWanted;
+                }
+
+                if (active && menu && !previousMenu) TapClearingAlt(Escape, altDown);
                 previousMenu = menu;
 
-                if (active && back && !previousBack) Tap(PauseGame);
+                if (active && back && !previousBack) TapClearingAlt(PauseGame, altDown);
                 previousBack = back;
 
-                // Left stick click sheathes or draws the sword last used.
-                if (active && leftThumb && !previousLeftThumb) Tap(lastSword);
+                // LB sheathes or draws the sword (Tab).
+                if (active && lb && !previousLB) TapClearingAlt(Tab, altDown);
+                previousLB = lb;
+
+                // Left stick click opens the map.
+                if (active && leftThumb && !previousLeftThumb) Tap(Map);
                 previousLeftThumb = leftThumb;
 
                 // D-pad up cycles the combat style: fast, strong, group.
@@ -349,8 +384,7 @@ internal static class DirectCombatController
                 if (active && left && !previousLeft)
                 {
                     weaponIndex = (weaponIndex + 1) % Weapons.Length;
-                    lastSword = Weapons[weaponIndex];
-                    Tap(lastSword);
+                    Tap(Weapons[weaponIndex]);
                 }
                 previousLeft = left;
 
@@ -382,7 +416,7 @@ internal static class DirectCombatController
                     quickTaps = 0;
                 }
 
-                bool signCast = connected && (Down(pad.Buttons, RB) || pad.RightTrigger >= TriggerThreshold);
+                bool signCast = connected && pad.RightTrigger >= TriggerThreshold;
                 if (active && signCast && !previousSignCast && !signMouseDown)
                 {
                     Mouse(RightDown, 0, 0);
@@ -408,6 +442,11 @@ internal static class DirectCombatController
         }
         finally
         {
+            if (altDown)
+            {
+                try { Key(LeftAlt, false); } catch { }
+                altDown = false;
+            }
             ReleaseHeld(held, ref signMouseDown);
             if (witcherProcess != null) witcherProcess.Dispose();
         }
