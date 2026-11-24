@@ -275,6 +275,7 @@ internal static class DirectCombatController
         int quickTaps = 0;
         double quickTapDeadline = 0;
         bool signMouseDown = false;
+        bool leftMouseDown = false;
         Process witcherProcess = null;
         double nextStartupCheck = 0, lastControllerInput = 0, nextIdleCheck = 30;
         bool wasIdle = false;
@@ -431,7 +432,17 @@ internal static class DirectCombatController
                     if (quickTaps < QuickSlots.Length) quickTaps++;
                     quickTapDeadline = now + 0.4;
                 }
-                if (active && a && !previousA) Click(); // Talk, pick up, use
+                // A holds the left mouse button: a tap interacts, holding it drags items.
+                if (active && a && !previousA)
+                {
+                    Mouse(LeftDown, 0, 0);
+                    leftMouseDown = true;
+                }
+                if ((!a || !active) && leftMouseDown)
+                {
+                    Mouse(LeftUp, 0, 0);
+                    leftMouseDown = false;
+                }
                 previousX = x; previousY = y; previousA = a;
 
                 // 1 tap uses slot 6, 2 quick taps slot 7, 3 quick taps slot 8.
@@ -471,6 +482,11 @@ internal static class DirectCombatController
             {
                 try { Key(LeftAlt, false); } catch { }
                 altDown = false;
+            }
+            if (leftMouseDown)
+            {
+                try { Mouse(LeftUp, 0, 0); } catch { }
+                leftMouseDown = false;
             }
             ReleaseHeld(held, ref signMouseDown);
             if (witcherProcess != null)
