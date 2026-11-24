@@ -1,5 +1,18 @@
 # История изменений
 
+## 0.3.0 — 2026-11-25
+
+### Добавлено
+
+- GUI-установщик: `installer/Setup.cs` и `installer/Build.ps1`. Автоопределение папки игры, установка, галочка «Создать ярлык на рабочем столе».
+- Ярлык запускает `DirectCombat\Play.cmd`: контроллер, затем Steam.
+- Резервная копия чужого `testtools.lua` — `testtools.lua.wdc-backup`; `Uninstall.ps1` возвращает её при удалении.
+- Файлы для архива: `installer/README-INSTALL.txt` и `installer/Uninstall.cmd`.
+
+### Примечание
+
+- Готовый `WitcherDirectCombatSetup.exe` **не входит** в репозиторий и релизы. Он собирается локально командой `installer\Build.ps1`.
+
 ## 0.2.1 — 2026-11-25
 
 ### Добавлено

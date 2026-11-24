@@ -8,7 +8,7 @@
 - Remote: `upstream` → [VeggieVampire/witcher-direct-combat](https://github.com/VeggieVampire/witcher-direct-combat). `origin` не настроен — его нужно добавить после создания форка.
 - История: оригинальный коммит Nick Farrow + коммиты форка.
 - Рабочее дерево чистое; `location.txt`, `nextweapon.bak` и логи в `.gitignore`.
-- Версия в `CHANGELOG.md`: 0.2.1.
+- Версия в `CHANGELOG.md`: 0.3.0.
 
 ## Что подготовлено
 
@@ -21,7 +21,10 @@
 - `.gitignore`, `.gitattributes`.
 - `Install.cmd` / `Install.ps1`, `Uninstall.cmd` / `Uninstall.ps1`.
 - `Payload/` — исходник, готовая сборка контроллера, `Play.cmd`, Lua-хук.
-- Проверено: PowerShell-скрипты парсятся, сборка в `Payload` совпадает с установленной, личных путей в репозитории нет.
+- `installer/` — исходник GUI-установщика, `Build.ps1`, тексты для архива.
+- Проверено: PowerShell-скрипты парсятся, установщик ставит и удаляет мод на тестовой папке, сборка в `Payload` совпадает с установленной, личных путей в репозитории нет.
+
+**Готовый `WitcherDirectCombatSetup.exe` не публикуется.** Он собирается локально (`installer\Build.ps1`), лежит в `dist/` (в `.gitignore`) и передаётся другу отдельным архивом. В репозиторий и релизы его не добавляем.
 
 ## Проверка перед публикацией
 
@@ -41,27 +44,7 @@ git remote -v
 
 ## Автор коммитов
 
-Коммиты этой сессии подписаны `OpenCode <opencode@local>`. Если нужен свой автор:
-
-```bash
-cd "путь/к/Witcher Direct Combat"
-git config user.name "Ваше Имя"
-git config user.email "you@example.com"
-```
-
-Переписать автора у последнего коммита:
-
-```bash
-git commit --amend --reset-author --no-edit
-```
-
-У всех коммитов сразу:
-
-```bash
-git rebase -i --root
-# в редакторе для каждого коммита:
-# exec git commit --amend --reset-author --no-edit
-```
+Коммиты форка уже подписаны `Ford-100500 <317495324+Ford-100500@users.noreply.github.com>`; оригинальный коммит Nick Farrow не изменён. Если нужен другой автор — настрой `git config user.name` / `user.email` и используй `git commit --amend --reset-author` или `git rebase --exec`.
 
 ## Создание форка и push
 
@@ -82,23 +65,8 @@ git push -u origin main
 
 - Заполни описание и темы: `witcher`, `mod`, `gamepad`, `xinput`, `the-witcher-1`.
 - Проверь, что GitHub корректно показывает README и ссылки на `docs/`.
-- При желании сделай релиз `v0.2.1`.
-
-Состав ZIP для релиза:
-
-```text
-Install.cmd
-Install.ps1
-Uninstall.cmd
-Uninstall.ps1
-LICENSE
-README.md
-CHANGELOG.md
-Payload/
-docs/
-```
-
-Не включай `location.txt`, `nextweapon.bak`, логи и файлы игры.
+- Релиз можно не делать. Если делать — **без `Setup.exe`**: приложи только автоматические исходники GitHub или вообще ничего.
+- `WitcherDirectCombatSetup.exe` и `dist/` не добавляй ни в репозиторий, ни в релиз.
 
 ## Чего не делать
 

@@ -57,12 +57,30 @@ try {
         }
     }
     foreach ($pair in $pairs) { if (Test-Path -LiteralPath $pair[0]) { Remove-Item -LiteralPath $pair[0] } }
+    $luaBackup = Join-Path $game 'System\Scripts\testtools.lua.wdc-backup'
+    if (Test-Path -LiteralPath $luaBackup) {
+        Move-Item -LiteralPath $luaBackup -Destination (Join-Path $game 'System\Scripts\testtools.lua') -Force
+    }
     if (Test-Path -LiteralPath $bindingBackup) { Remove-Item -LiteralPath $bindingBackup -Force }
     Remove-Item -LiteralPath $manifestPath
     if ((Test-Path -LiteralPath $installDir) -and -not (Get-ChildItem -LiteralPath $installDir -Force)) { Remove-Item -LiteralPath $installDir }
     if (Test-Path -LiteralPath $locationFile) {
         $recordedGame = (Get-Content -LiteralPath $locationFile -Raw).Trim()
         if ($recordedGame -eq $game) { Remove-Item -LiteralPath $locationFile }
+    }
+    $shortcut = Join-Path ([Environment]::GetFolderPath('DesktopDirectory')) 'The Witcher - Direct Combat.lnk'
+    if (Test-Path -LiteralPath $shortcut) {
+        try {
+            $wsh = New-Object -ComObject WScript.Shell
+            $sc = $wsh.CreateShortcut($shortcut)
+            $target = $sc.TargetPath
+            if ($target -and (Test-Path -LiteralPath $target)) {
+                $fullTarget = (Get-Item -LiteralPath $target).FullName
+                if ($fullTarget.StartsWith($game, [StringComparison]::OrdinalIgnoreCase)) {
+                    Remove-Item -LiteralPath $shortcut -Force
+                }
+            }
+        } catch { }
     }
     Write-Host "Removed Witcher Direct Combat from $game"
 } catch {
